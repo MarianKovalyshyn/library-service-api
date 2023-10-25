@@ -16,4 +16,5 @@ class BookTests(TestCase):
             str(book),
             f"Title:{book.title};"
             f" Author: {book.author};"
-            f" Daily fee: {book.daily_fee}")
+            f" Daily fee: {book.daily_fee}"
+        )
