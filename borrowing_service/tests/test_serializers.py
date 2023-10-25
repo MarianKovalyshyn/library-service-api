@@ -21,9 +21,9 @@ class BorrowingSerializerTest(TestCase):
         serializer = BorrowingSerializer(instance=self.borrowing)
         expected_data = {
             "id": self.borrowing.id,
-            "borrow_date": "2023-09-25T14:00:00Z",
-            "expected_return_date": "2024-01-25T10:00:00Z",
-            "actual_return_date": "2023-10-25T14:00:00Z",
+            "borrow_date": datetime(2023, 9, 25, 14, 0),
+            "expected_return_date": datetime(2024, 1, 25, 10, 0),
+            "actual_return_date": datetime(2023, 10, 25, 14, 0),
             "book_id": self.borrowing.book_id,
             "user_id": self.borrowing.user_id,
         }
