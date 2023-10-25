@@ -5,5 +5,6 @@ from borrowing_service.serializers import BorrowingSerializer
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
-    queryset = Borrowing
+    queryset = Borrowing.objects.all()
     serializer_class = BorrowingSerializer
+
