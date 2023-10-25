@@ -8,7 +8,7 @@ class BookTests(TestCase):
         book = Book.objects.create(
             title="test_title",
             author="test_author",
-            daily_fee=20.50,
+            daily_fee=20,
             cover="SOFT",
             inventory=5
         )

@@ -9,7 +9,7 @@ class Book(models.Model):
         choices=[("SOFT", "SOFT"), ("HARD", "HARD")]
     )
     inventory = models.PositiveIntegerField()
-    daily_fee = models.DecimalField(max_digits=4, decimal_places=2)
+    daily_fee = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
         return (f"Title:{self.title};"
