@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "book_service",
+    "customers_service"
 ]
 
 MIDDLEWARE = [
@@ -125,4 +126,4 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = "customer_service.User"
+AUTH_USER_MODEL = "customers_service.User"
