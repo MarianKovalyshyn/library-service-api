@@ -6,7 +6,7 @@ class Borrowing(models.Model):
     expected_return_date = models.DateTimeField()
     actual_return_date = models.DateTimeField()
     book_id = models.IntegerField()
-    user_id: models.IntegerField()
+    user_id = models.IntegerField()
 
     class Meta:
         ordering = ["-borrow_date"]
