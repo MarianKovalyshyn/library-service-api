@@ -7,11 +7,15 @@ from borrowing_service.serializers import BorrowingSerializer
 
 
 class BorrowingSerializerTest(TestCase):
+    borrow_date = datetime(2023, 9, 25, 14, 0)
+    expected_return_date = datetime(2024, 1, 25, 10, 0)
+    actual_return_date = datetime(2023, 10, 25, 14, 0)
+
     def setUp(self):
         self.borrowing_data = {
-            "borrow_date": datetime(2023, 9, 25, 14, 0),
-            "expected_return_date": datetime(2024, 1, 25, 10, 0),
-            "actual_return_date": datetime(2023, 10, 25, 14, 0),
+            "borrow_date": self.borrow_date,
+            "expected_return_date": self.expected_return_date,
+            "actual_return_date": self.actual_return_date,
             "book_id": 1,
             "user_id": 2,
         }
@@ -21,9 +25,9 @@ class BorrowingSerializerTest(TestCase):
         serializer = BorrowingSerializer(instance=self.borrowing)
         expected_data = {
             "id": self.borrowing.id,
-            "borrow_date": datetime(2023, 9, 25, 14, 0),
-            "expected_return_date": datetime(2024, 1, 25, 10, 0),
-            "actual_return_date": datetime(2023, 10, 25, 14, 0),
+            "borrow_date": self.borrow_date,
+            "expected_return_date": self.expected_return_date,
+            "actual_return_date": self.actual_return_date,
             "book_id": self.borrowing.book_id,
             "user_id": self.borrowing.user_id,
         }
@@ -35,9 +39,9 @@ class BorrowingSerializerTest(TestCase):
 
     def test_invalid_serializer(self):
         payload = {
-            "borrow_date": datetime(2023, 9, 25, 14, 0),
-            "expected_return_date": datetime(2024, 1, 25, 10, 0),
-            "actual_return_date": datetime(2023, 10, 25, 14, 0),
+            "borrow_date": "2024-01-25T10:00:00Z",
+            "expected_return_date": self.expected_return_date,
+            "actual_return_date": self.actual_return_date,
             "book_id": "book title",
         }
         serializer = BorrowingSerializer(data=payload)
