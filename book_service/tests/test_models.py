@@ -4,7 +4,7 @@ from book_service.models import Book
 
 
 class BookTests(TestCase):
-    def test_car_str(self):
+    def test_book_str(self):
         book = Book.objects.create(
             title="test_title",
             author="test_author",
@@ -16,4 +16,5 @@ class BookTests(TestCase):
             str(book),
             f"Title:{book.title};"
             f" Author: {book.author};"
-            f" Daily fee: {book.daily_fee}")
+            f" Daily fee: {book.daily_fee}"
+        )
