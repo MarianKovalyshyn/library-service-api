@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "customers_service",
+    "borrowing_service",
+    "notifications_service",
     "book_service",
     "payment_service",
 ]
@@ -137,4 +140,4 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = "customer_service.User"
+AUTH_USER_MODEL = "customers_service.User"
