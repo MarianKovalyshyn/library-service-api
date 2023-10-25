@@ -1,6 +1,7 @@
 from django.test import TestCase
-from .models import Book
-from .serializers import BookSerializer
+
+from book_service.models import Book
+from book_service.serializers import BookSerializer
 
 
 class BookSerializerTest(TestCase):
