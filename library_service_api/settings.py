@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "book_service",
-    "customers_service"
+    "customers_service",
+    "payment_service",
 ]
 
 MIDDLEWARE = [
