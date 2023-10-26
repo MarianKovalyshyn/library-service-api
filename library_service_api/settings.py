@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "borrowing_service",
     "notifications_service",
     "book_service",
+    "customers_service",
     "payment_service",
 ]
 
