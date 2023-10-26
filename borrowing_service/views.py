@@ -18,7 +18,7 @@ from borrowing_service.serializers import (
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
     serializer_class = BorrowingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
         with transaction.atomic():
@@ -28,7 +28,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             if book.inventory > 0:
                 book.inventory -= 1
                 book.save()
-                serializer.save()
+                serializer.save(user=self.request.user)
             else:
                 return Response(
                     {"error": "This book is not available"},
@@ -37,7 +37,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
-        is_staff = self.request.query_params.get("is_staff")
+        is_staff = self.request.user.is_staff
         user_id = self.request.query_params.get("user_id")
         is_active = self.request.query_params.get("is_active")
 
@@ -51,17 +51,24 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if self.request.user.is_staff:
+
+        if self.action == "create":
+            return BorrowingCreateSerializer
+
+        if self.action == "list":
+            return self.serializer_class
+
+        if (self.action == "update" or self.action == "partial_update") and self.request.user.is_staff:
             return BorrowingSerializerWithUserData
 
         if self.action == "retrieve":
-            BorrowingDetailSerializer
+            return BorrowingDetailSerializer
 
         if self.action == "return_borrowing":
             return BorrowingReturnSerializer
 
-        if self.action == "create":
-            return BorrowingCreateSerializer
+        if self.request.user.is_staff:
+            return BorrowingSerializerWithUserData
 
         return self.serializer_class
 
