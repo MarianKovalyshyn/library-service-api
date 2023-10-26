@@ -13,12 +13,13 @@ from borrowing_service.serializers import (
     BorrowingReturnSerializer,
     BorrowingCreateSerializer
 )
+from notifications_service.notifications import send_telegram_message
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
     serializer_class = BorrowingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
         with transaction.atomic():
@@ -88,3 +89,19 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             {"message": "Borrowing returned successfully"},
             status=status.HTTP_200_OK
         )
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        response = Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+        if response.status_code == status.HTTP_201_CREATED:
+            borrowing_info = response.data
+            message = f"New borrowing created! Details: \n{borrowing_info}"
+            if borrowing_info["actual_return_date"] > borrowing_info["expected_return_date"]:
+                message += "\nBorrowing is overdue"
+            send_telegram_message(message)
+
+        return response
