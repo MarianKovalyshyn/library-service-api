@@ -10,11 +10,11 @@ class BookTests(TestCase):
             author="test_author",
             daily_fee=20.50,
             cover="SOFT",
-            inventory=5
+            inventory=5,
         )
         self.assertEqual(
             str(book),
             f"Title:{book.title};"
             f" Author: {book.author};"
-            f" Daily fee: {book.daily_fee}"
+            f" Daily fee: {book.daily_fee}",
         )

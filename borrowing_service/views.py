@@ -11,7 +11,7 @@ from borrowing_service.serializers import (
     BorrowingSerializerWithUserData,
     BorrowingDetailSerializer,
     BorrowingReturnSerializer,
-    BorrowingCreateSerializer
+    BorrowingCreateSerializer,
 )
 
 
@@ -32,7 +32,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             else:
                 return Response(
                     {"error": "This book is not available"},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
     def get_queryset(self):
@@ -46,7 +46,9 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         if user_id:
             queryset = queryset.filter(user_id=user_id)
         if is_active:
-            queryset = queryset.filter(expected_return_date__gte=timezone.now())
+            queryset = queryset.filter(
+                expected_return_date__gte=timezone.now()
+            )
 
         return queryset
 
@@ -72,7 +74,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         if borrowing.actual_return_date:
             return Response(
                 {"error": "This borrowing has already been returned."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         book_id = self.request.data.get("book")
@@ -86,5 +88,5 @@ class BorrowingViewSet(viewsets.ModelViewSet):
 
         return Response(
             {"message": "Borrowing returned successfully"},
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )

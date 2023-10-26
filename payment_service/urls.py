@@ -7,7 +7,7 @@ router = DefaultRouter()
 router.register("payments", PaymentViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
 
 app_name = "payment-service"

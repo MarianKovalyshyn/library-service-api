@@ -17,5 +17,5 @@ class PaymentTests(TestCase):
             str(payment),
             f"Status: {payment.status};"
             f" Type: {payment.type};"
-            f" Money to pay: {payment.money_to_pay}"
+            f" Money to pay: {payment.money_to_pay}",
         )

@@ -10,7 +10,9 @@ class Borrowing(models.Model):
     expected_return_date = models.DateTimeField()
     actual_return_date = models.DateTimeField(null=True)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )
 
     class Meta:
         ordering = ["-borrow_date"]

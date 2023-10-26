@@ -9,14 +9,14 @@ class Payment(models.Model):
         choices=[
             ("PENDING", "PENDING"),
             ("PAID", "PAID"),
-        ]
+        ],
     )
     type = models.CharField(
         max_length=7,
         choices=[
             ("PAYMENT", "PAYMENT"),
             ("FINE", "FINE"),
-        ]
+        ],
     )
     borrowing_id = models.ForeignKey(Borrowing, on_delete=models.CASCADE)
     session_url = models.URLField(max_length=255)
