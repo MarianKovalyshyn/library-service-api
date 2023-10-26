@@ -17,7 +17,7 @@ class Borrowing(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=Q(expected_return_date__gte=F("borrow_date"))
-                | Q(actual_return_date__gte=F("borrow_date")),
+                & Q(actual_return_date__gte=F("borrow_date")),
                 name="valid_return_date",
             )
         ]
