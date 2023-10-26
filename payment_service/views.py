@@ -3,8 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from payment_service.models import Payment
 from payment_service.serializers import (
-    PaymentListSerializer,
     PaymentDetailSerializer,
+    PaymentListSerializer,
 )
 
 

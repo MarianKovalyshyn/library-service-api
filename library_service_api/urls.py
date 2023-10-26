@@ -40,3 +40,4 @@ urlpatterns = [
         include("payment_service.urls", namespace="payment-service"),
     )
 ]
+
