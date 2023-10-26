@@ -1,5 +1,5 @@
 from rest_framework import generics
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 
 from customers_service.serializers import UserSerializer
 
@@ -10,9 +10,7 @@ class CreateUserView(generics.CreateAPIView):
 
 class ManageUserView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_object(self):
-        if self.request.user.is_authenticated:
-            return self.request.user
-        else:
-            raise PermissionDenied("User not authenticated")
+        return self.request.user
