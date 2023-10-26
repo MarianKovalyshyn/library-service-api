@@ -23,7 +23,7 @@ urlpatterns = [
         "book_service.urls",
         namespace="book-service"
     )),
-    path("users/", include(
+    path("api/users/", include(
       "customers_service.urls",
       namespace="users"
     )),
