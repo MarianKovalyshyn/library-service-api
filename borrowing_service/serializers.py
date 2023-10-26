@@ -65,4 +65,4 @@ class BorrowingDetailSerializer(serializers.ModelSerializer):
 class BorrowingReturnSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrowing
-        fields = ("id", "book")
+        fields = ("id",)

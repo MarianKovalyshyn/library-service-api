@@ -82,9 +82,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        book_id = self.request.data.get("book")
-        book = Book.objects.get(id=book_id)
-
+        book = borrowing.book
         book.inventory += 1
         book.save()
 
