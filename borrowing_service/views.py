@@ -1,3 +1,5 @@
+from math import ceil
+
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -17,12 +19,21 @@ from borrowing_service.serializers import (
     BorrowingCreateSerializer,
 )
 from payment_service.models import Payment
+from payment_service.views import PaymentViewSet
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.select_related("book", "user")
     serializer_class = BorrowingSerializer
     permission_classes = (permissions.IsAuthenticated,)
+
+    @staticmethod
+    def calculate_money_to_pay(borrowing: BorrowingSerializer) -> int:
+        expected_return_date = borrowing.instance.expected_return_date
+        borrow_date = borrowing.instance.borrow_date
+        days = (expected_return_date - borrow_date).days
+        money_to_pay = days * borrowing.instance.book.daily_fee
+        return ceil(money_to_pay) if money_to_pay >= 1 else 1
 
     def perform_create(self, serializer):
         with transaction.atomic():
@@ -33,6 +44,16 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 book.inventory -= 1
                 book.save()
                 serializer.save(user=self.request.user)
+                money_to_pay = self.calculate_money_to_pay(serializer)
+                checkout_session = PaymentViewSet.create_checkout_session(
+                    money_to_pay, "http://library_service_api"
+                )
+                Payment.objects.create(
+                    borrowing=serializer.instance,
+                    money_to_pay=money_to_pay,
+                    session_url=checkout_session["session_url"],
+                    session_id=checkout_session["session_id"],
+                )
             else:
                 return Response(
                     {"error": "This book is not available"},
@@ -64,7 +85,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             OpenApiParameter(
                 name="user_id",
                 type={"type": "number"},
-                description="Filter by user id (ex. ?user_id=1)."
+                description="Filter by user id (ex. ?user_id=1).",
             ),
             OpenApiParameter(
                 name="is_active",
@@ -128,7 +149,27 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         book.inventory += 1
         book.save()
 
+        borrowing.actual_return_date = timezone.now()
+
+        if borrowing.actual_return_date > borrowing.expected_return_date:
+            days_overdue = (
+                borrowing.actual_return_date - borrowing.expected_return_date
+            ).days
+            fine_amount = ceil(days_overdue * borrowing.book.daily_fee * 2)
+            checkout_session = PaymentViewSet.create_checkout_session(
+                fine_amount, "http://library_service_api"
+            )
+            Payment.objects.create(
+                borrowing=borrowing,
+                money_to_pay=fine_amount,
+                session_url=checkout_session["session_url"],
+                session_id=checkout_session["session_id"],
+                type="FINE",
+            )
+
+        borrowing.save()
+
         return Response(
-            {"message": f"Borrowing returned successfully"},
-            status=status.HTTP_200_OK
+            {"message": "Borrowing returned successfully"},
+            status=status.HTTP_200_OK,
         )
