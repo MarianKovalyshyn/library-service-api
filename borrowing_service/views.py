@@ -1,4 +1,3 @@
-from datetime import datetime
 from math import ceil
 
 from django.db import transaction
@@ -23,22 +22,18 @@ from payment_service.models import Payment
 from payment_service.views import PaymentViewSet
 
 
-def helper_func(borrowing):
-    expected_return_date = borrowing.data["expected_return_date"][0:10]
-    date = datetime.fromisoformat(expected_return_date)
-    borrow_date = datetime.fromisoformat(str(datetime.now())[0:10])
-    days = (date - borrow_date).days
-
-    daily_fee = Book.objects.get(id=borrowing.data["book"]).daily_fee
-    money_to_pay = days * daily_fee
-
-    return ceil(money_to_pay) if money_to_pay >= 1 else 1
-
-
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.select_related("book", "user")
     serializer_class = BorrowingSerializer
     permission_classes = (permissions.IsAuthenticated,)
+
+    @staticmethod
+    def calculate_money_to_pay(borrowing: BorrowingSerializer) -> int:
+        expected_return_date = borrowing.instance.expected_return_date
+        borrow_date = borrowing.instance.borrow_date
+        days = (expected_return_date - borrow_date).days
+        money_to_pay = days * borrowing.instance.book.daily_fee
+        return ceil(money_to_pay) if money_to_pay >= 1 else 1
 
     def perform_create(self, serializer):
         with transaction.atomic():
@@ -49,7 +44,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 book.inventory -= 1
                 book.save()
                 serializer.save(user=self.request.user)
-                money_to_pay = helper_func(serializer)
+                money_to_pay = self.calculate_money_to_pay(serializer)
                 checkout_session = PaymentViewSet.create_checkout_session(
                     money_to_pay, "http://library_service_api"
                 )
@@ -157,7 +152,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 money_to_pay=fine_amount,
                 session_url=checkout_session["session_url"],
                 session_id=checkout_session["session_id"],
-                type="FINE"
+                type="FINE",
             )
 
         borrowing.save()
