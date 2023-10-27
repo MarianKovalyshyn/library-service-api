@@ -74,10 +74,9 @@ class AuthenticatedBorrowingTests(TestCase):
 class TestFilter(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = get_user_model().objects.create_user(
+        self.user = get_user_model().objects.create_superuser(
             "admin@test.com",
             "admin1234",
-            is_staff=True,
         )
 
         self.client.force_authenticate(self.user)
