@@ -45,6 +45,7 @@ python manage.py runserver
    "borrowing_service" : 
                    "http://127.0.0.1:8000/api/borrowing-service/borrowings/"
                    "http://127.0.0.1:8000/api/borrowing-service/borrowings/{id}/return_borrowing/"
+                   "http://127.0.0.1:8000/api/borrowing-service/borrowings/{id}/"
                    
    "customers_service": 
                    "http://127.0.0.1:8000/api/users/"
