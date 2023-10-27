@@ -18,4 +18,8 @@ def check_overdue_borrowings():
 
     for borrowing in overdue_borrowings:
         message = f"Borrowing is overdue! Details: \n{borrowing}"
-        send_telegram_message(message)
+
+    if not overdue_borrowings:
+        message = "No borrowings overdue today!"
+
+    send_telegram_message(message)
