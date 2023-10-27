@@ -32,10 +32,6 @@ urlpatterns = [
         include("borrowing_service.urls", namespace="borrowing-service"),
     ),
     path(
-        "api/book-service/",
-        include("book_service.urls", namespace="book-service"),
-    ),
-    path(
         "api/payment-service/",
         include("payment_service.urls", namespace="payment-service"),
     ),
