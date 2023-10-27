@@ -113,13 +113,7 @@ class BorrowingViewSet(viewsets.ModelViewSet):
             )
 
         borrowing.actual_return_date = timezone.now()
-
-        days = (borrowing.actual_return_date - borrowing.borrow_date).days
-        amount = days * borrowing.daily_fee
-        existing_payment = Payment.objects.get(borrowing_id=borrowing.id, type="FINE")
-        existing_payment.money_to_pay = amount
-        existing_payment.save()
-
+        
         if borrowing.actual_return_date > borrowing.expected_return_date:
             days_overdue = (borrowing.expected_return_date - borrowing.actual_return_date).days
             fine_amount = days_overdue * borrowing.daily_fee * 2
