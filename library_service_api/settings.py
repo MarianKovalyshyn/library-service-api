@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -145,3 +146,8 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "customers_service.User"
+
+#Stripe settings
+STRIPE_PUBLIC_KEY = "pk_test_51O5YwaAWEUmzzbZdWVVxm87CLJdCVpdz9mzjhpLoKaaWb1zWswcfX9Q8UMMtL9G4GqajaDlQIhPPJKDxl4FscWQ800Tu5u17vz"
+STRIPE_SECRET_KEY = "sk_test_51O5YwaAWEUmzzbZdzlln4kKTacpM2mqLFhgqmgTy3KslXqFR8BYTyQOdeuraa7JCCPdILXgJRuJzER1pd9NF5h9L00o6FkmDZd"
+STRIPE_WEBHOOK_SECRET = "https://dashboard.stripe.com/test/webhooks/we_1O5n30AWEUmzzbZd5yx1kltl"
