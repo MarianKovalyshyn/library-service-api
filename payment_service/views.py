@@ -1,18 +1,16 @@
-import os
-
 import stripe
+
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-
-from payment_service.models import Payment
-from payment_service.serializers import PaymentSerializer, PaymentListSerializer
 from django.conf import settings
-
 
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from payment_service.models import Payment
+from payment_service.serializers import PaymentSerializer, PaymentListSerializer
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
