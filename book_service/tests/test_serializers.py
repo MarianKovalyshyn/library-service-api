@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.test import TestCase
 
 from book_service.models import Book
@@ -9,22 +11,23 @@ class BookSerializerTest(TestCase):
         self.book_data = {
             "title": "Test Book",
             "author": "Author Test",
-            "cover": "COVER",
+            "cover": "SOFT",
             "inventory": 2,
-            "daily_fee": 5.55,
+            "daily_fee": Decimal("5.55"),
         }
         self.book = Book.objects.create(**self.book_data)
 
     def test_serializer_output(self):
         serializer = BookSerializer(instance=self.book)
-        expected_data = {
+        expected = {
+            "id": self.book.id,
             "title": "Test Book",
             "author": "Author Test",
-            "cover": "COVER",
+            "cover": "SOFT",
             "inventory": 2,
-            "daily_fee": 5.55,
+            "daily_fee": "5.55",
         }
-        self.assertEqual(serializer.data, expected_data)
+        self.assertEqual(serializer.data, expected)
 
     def test_valid_serializer(self):
         serializer = BookSerializer(data=self.book_data)
