@@ -41,14 +41,14 @@ class PaymentViewSet(viewsets.ModelViewSet):
         stripe.api_key = settings.STRIPE_SECRET_KEY
         try:
             checkout_session = stripe.checkout.Session.create(
-                success_url=domain + "success/",
-                cancel_url=domain + "cancelled/",
+                success_url=domain + "/success/",
+                cancel_url=domain + "/cancelled/",
                 payment_method_types=["card"],
                 mode="payment",
                 line_items=[{
                     "price_data": {
                         "currency": "usd",
-                        "unit_amount": money_to_pay,
+                        "unit_amount": money_to_pay * 100,
                         "product_data": {
                             "name": "Borrowed book",
                         },
