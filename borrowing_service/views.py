@@ -133,6 +133,18 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        borrowing.actual_return_date = timezone.now()
+        
+        if borrowing.actual_return_date > borrowing.expected_return_date:
+            days_overdue = (borrowing.expected_return_date - borrowing.actual_return_date).days
+            fine_amount = days_overdue * borrowing.daily_fee * 2
+
+            existing_payment = Payment.objects.get(borrowing_id=borrowing.id, type="FINE")
+            existing_payment.money_to_pay += fine_amount
+            existing_payment.save()
+
+        borrowing.save()
+
         book = borrowing.book
         book.inventory += 1
         book.save()

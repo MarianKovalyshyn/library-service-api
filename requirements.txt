@@ -23,3 +23,5 @@ sqlparse==0.4.4
 tzdata==2023.3
 stripe==7.0.0
 uritemplate==4.1.1
+python-dotenv==0.19.2
+requests==2.26.0
