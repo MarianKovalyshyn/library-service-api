@@ -16,7 +16,7 @@ from borrowing_service.serializers import (
     BorrowingReturnSerializer,
     BorrowingCreateSerializer,
 )
-from notifications_service.notification_function import send_telegram_message
+from payment_service.models import Payment
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
@@ -112,28 +112,23 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        borrowing.actual_return_date = timezone.now()
+        
+        if borrowing.actual_return_date > borrowing.expected_return_date:
+            days_overdue = (borrowing.expected_return_date - borrowing.actual_return_date).days
+            fine_amount = days_overdue * borrowing.daily_fee * 2
+
+            existing_payment = Payment.objects.get(borrowing_id=borrowing.id, type="FINE")
+            existing_payment.money_to_pay += fine_amount
+            existing_payment.save()
+
+        borrowing.save()
+
         book = borrowing.book
         book.inventory += 1
         book.save()
 
-        borrowing.actual_return_date = timezone.now()
-        borrowing.save()
-
         return Response(
-            {"message": "Borrowing returned successfully"},
+            {"message": f"Borrowing returned successfully"},
             status=status.HTTP_200_OK
         )
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        response = Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-        if response.status_code == status.HTTP_201_CREATED:
-            borrowing_info = response.data
-            message = f"New borrowing created! Details: \n{borrowing_info}"
-            send_telegram_message(message)
-
-        return response
