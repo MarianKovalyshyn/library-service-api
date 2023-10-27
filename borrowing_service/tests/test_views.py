@@ -9,7 +9,9 @@ from rest_framework.test import APIClient
 from book_service.models import Book
 from book_service.serializers import BookSerializer
 from borrowing_service.models import Borrowing
-from borrowing_service.serializers import BorrowingSerializer
+from borrowing_service.serializers import (
+    BorrowingSerializer, BorrowingDetailSerializer
+)
 
 
 BORROWING_URL = reverse("borrowing-service:borrowing-list")
@@ -58,17 +60,22 @@ class AuthenticatedBorrowingTests(TestCase):
         )
 
     def test_list_borrowings(self):
-        res = self.client.get(BORROWING_URL)
+        response = self.client.get(BORROWING_URL)
 
         borrowings = Borrowing.objects.filter(user=self.user)
         serializer = BorrowingSerializer(borrowings, many=True)
 
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
 
     def test_retrieve_borrowings_authenticated(self):
         response = self.client.get(detail_url(self.borrowing.id))
+
+        borrowing = Borrowing.objects.get(id=self.borrowing.id)
+        serializer = BorrowingDetailSerializer(borrowing)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)
 
 
 class TestFilter(TestCase):
@@ -97,15 +104,14 @@ class TestFilter(TestCase):
         )
 
     def test_borrowings_filter(self):
-        self.client.force_authenticate(self.user)
         res_user = self.client.get(
             BORROWING_URL,
-            {"user_id": f"{self.user.id}"})
+            {"user_id": f"{self.user.id}"}
+        )
 
         res_user_is_active = self.client.get(
             BORROWING_URL,
-            {"user_id": f"{self.user.id}"},
-            {"is_active": f"True"}
+            {"user_id": f"{self.user.id}"}, {"is_active": "True"}
         )
 
         serializer1 = BorrowingSerializer(self.borrowing1)
