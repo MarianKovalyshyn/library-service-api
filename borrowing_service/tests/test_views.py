@@ -69,7 +69,7 @@ def detail_url(borrowing_id: int):
     return reverse("borrowing-service:borrowing-detail", args=[borrowing_id])
 
 
-class UnauthenticatedBorrowingTests(TestCase):
+class TestUnauthenticatedBorrowing(TestCase):
     def setUp(self):
         self.client = APIClient()
 
@@ -78,7 +78,7 @@ class UnauthenticatedBorrowingTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class AuthenticatedBorrowingTests(TestCase):
+class TestAuthenticatedBorrowing(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.borrowing = sample_borrowing()
@@ -140,7 +140,7 @@ class TestFilter(TestCase):
         self.assertIn(serializer2.data, response_user_is_active.data)
 
 
-class AdminBorrowingViewSetTests(TestCase):
+class TestAdminBorrowingViewSet(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin_user = sample_superuser()
@@ -153,13 +153,11 @@ class AdminBorrowingViewSetTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class ReturnBookTestCase(TestCase):
+class TestReturnBook(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.borrowing = sample_borrowing()
-        self.user = self.borrowing.user
-        self.book = self.borrowing.book
-        self.client.force_authenticate(self.user)
+        self.client.force_authenticate(self.borrowing.user)
 
     def test_return_book(self):
         response = self.client.post(
@@ -174,5 +172,5 @@ class ReturnBookTestCase(TestCase):
         )
         self.borrowing.refresh_from_db()
         self.assertIsNotNone(self.borrowing.actual_return_date)
-        self.book.refresh_from_db()
-        self.assertEqual(self.book.inventory, 11)
+        self.borrowing.book.refresh_from_db()
+        self.assertEqual(self.borrowing.book.inventory, 11)
