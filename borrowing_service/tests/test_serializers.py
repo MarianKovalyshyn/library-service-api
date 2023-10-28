@@ -42,10 +42,12 @@ class BorrowingSerializerTest(TestCase):
                 "password123",
             ),
         }
+
         self.borrowing = Borrowing.objects.create(**self.borrowing_data)
 
     def test_serializer_output(self):
         serializer = BorrowingSerializer(instance=self.borrowing)
+
         expected_data = {
             "id": self.borrowing.id,
             "borrow_date": datetime_to_iso(self.borrowing.borrow_date),
@@ -55,17 +57,27 @@ class BorrowingSerializerTest(TestCase):
             "actual_return_date": self.borrowing.actual_return_date,
             "book": self.borrowing.book.title,
             "user": self.borrowing.user.email,
+            "payments": [],
         }
+
         self.assertEqual(serializer.data, expected_data)
 
-    def test_valid_serializer(self):
-        serializer = BorrowingSerializer(data=self.borrowing_data)
+    def test_valid_create_serializer(self):
+        payload = {
+            "expected_return_date": timezone.now() + timedelta(days=1),
+            "book": self.borrowing.book.id,
+        }
+
+        serializer = BorrowingCreateSerializer(data=payload)
+
         self.assertTrue(serializer.is_valid())
 
-    def test_invalid_serializer(self):
+    def test_invalid_create_serializer(self):
         payload = {
             "expected_return_date": timezone.now() - timedelta(days=1),
-            "book_id": self.borrowing.book.id,
+            "book": self.borrowing.book.id,
         }
+
         serializer = BorrowingCreateSerializer(data=payload)
+
         self.assertFalse(serializer.is_valid())
