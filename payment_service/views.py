@@ -31,7 +31,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
         return self.serializer_class
 
     def get_queryset(self):
-        is_staff = self.request.query_params.get("is_staff")
+        is_staff = self.request.user.is_staff
         if not is_staff:
             return self.queryset.filter(borrowing__user=self.request.user)
         return self.queryset
@@ -41,8 +41,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
         stripe.api_key = settings.STRIPE_SECRET_KEY
         try:
             checkout_session = stripe.checkout.Session.create(
-                success_url=domain + "/success/",
-                cancel_url=domain + "/cancelled/",
+                success_url=domain + "success/",
+                cancel_url=domain + "cancel/",
                 payment_method_types=["card"],
                 mode="payment",
                 line_items=[{
@@ -78,7 +78,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    @action(detail=True, methods=["GET"], url_path='cancelled')
+    @action(detail=True, methods=["GET"], url_path='cancel')
     def cancel(self, request, *args, **kwargs):
         return Response(
             {"message": "Your payment wasn't successful. Please, try again."},

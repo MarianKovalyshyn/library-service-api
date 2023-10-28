@@ -2,11 +2,13 @@ from math import ceil
 
 from django.db import transaction
 from django.db.models import Q
+from django.urls import reverse
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from book_service.models import Book
@@ -27,13 +29,30 @@ class BorrowingViewSet(viewsets.ModelViewSet):
     serializer_class = BorrowingSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    @staticmethod
-    def calculate_money_to_pay(borrowing: BorrowingSerializer) -> int:
+    def create_payment(self, borrowing: BorrowingSerializer) -> None:
         expected_return_date = borrowing.instance.expected_return_date
         borrow_date = borrowing.instance.borrow_date
         days = (expected_return_date - borrow_date).days
         money_to_pay = days * borrowing.instance.book.daily_fee
-        return ceil(money_to_pay) if money_to_pay >= 1 else 1
+        result = ceil(money_to_pay) if money_to_pay >= 1 else 1
+
+        payment = Payment.objects.create(
+            borrowing=borrowing.instance,
+            money_to_pay=result,
+        )
+
+        absolute_uri = self.request.build_absolute_uri(
+            reverse("payment-service:payment-detail", kwargs={"pk": payment.id})
+        )
+
+        checkout_session = PaymentViewSet.create_checkout_session(
+            result, absolute_uri
+        )
+
+        payment.session_url = checkout_session["session_url"]
+        payment.session_id = checkout_session["session_id"]
+        payment.save()
+
 
     def perform_create(self, serializer):
         with transaction.atomic():
@@ -44,21 +63,9 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 book.inventory -= 1
                 book.save()
                 serializer.save(user=self.request.user)
-                money_to_pay = self.calculate_money_to_pay(serializer)
-                checkout_session = PaymentViewSet.create_checkout_session(
-                    money_to_pay, "http://library_service_api"
-                )
-                Payment.objects.create(
-                    borrowing=serializer.instance,
-                    money_to_pay=money_to_pay,
-                    session_url=checkout_session["session_url"],
-                    session_id=checkout_session["session_id"],
-                )
+                self.create_payment(serializer)
             else:
-                return Response(
-                    {"error": "This book is not available"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                raise ValidationError({"error": "This book is not available"})
 
     def get_queryset(self):
         queryset = self.queryset
@@ -132,18 +139,6 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 {"error": "This borrowing has already been returned."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        borrowing.actual_return_date = timezone.now()
-        
-        if borrowing.actual_return_date > borrowing.expected_return_date:
-            days_overdue = (borrowing.expected_return_date - borrowing.actual_return_date).days
-            fine_amount = days_overdue * borrowing.daily_fee * 2
-
-            existing_payment = Payment.objects.get(borrowing_id=borrowing.id, type="FINE")
-            existing_payment.money_to_pay += fine_amount
-            existing_payment.save()
-
-        borrowing.save()
 
         book = borrowing.book
         book.inventory += 1
