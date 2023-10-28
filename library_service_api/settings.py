@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv(os.path.join("", ".env"))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,10 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-c)smdo1ys6i824r6@3y(+326lo7pw%v=_67hragmg#^29s&d!l"
-
+SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG")
 
 ALLOWED_HOSTS = []
 
@@ -147,7 +149,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -156,7 +158,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "customers_service.User"
 
-#Stripe settings
-STRIPE_PUBLIC_KEY = "pk_test_51O5YwaAWEUmzzbZdWVVxm87CLJdCVpdz9mzjhpLoKaaWb1zWswcfX9Q8UMMtL9G4GqajaDlQIhPPJKDxl4FscWQ800Tu5u17vz"
-STRIPE_SECRET_KEY = "sk_test_51O5YwaAWEUmzzbZdzlln4kKTacpM2mqLFhgqmgTy3KslXqFR8BYTyQOdeuraa7JCCPdILXgJRuJzER1pd9NF5h9L00o6FkmDZd"
-STRIPE_WEBHOOK_SECRET = "https://dashboard.stripe.com/test/webhooks/we_1O5n30AWEUmzzbZd5yx1kltl"
+# Stripe settings
+STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
