@@ -22,6 +22,7 @@ from borrowing_service.serializers import (
 )
 from payment_service.models import Payment
 from payment_service.views import PaymentViewSet
+from notifications_service.notification_function import send_telegram_message
 
 
 class BorrowingViewSet(viewsets.ModelViewSet):
@@ -42,7 +43,9 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         )
 
         absolute_uri = self.request.build_absolute_uri(
-            reverse("payment-service:payment-detail", kwargs={"pk": payment.id})
+            reverse(
+                "payment-service:payment-detail", kwargs={"pk": payment.id}
+            )
         )
 
         checkout_session = PaymentViewSet.create_checkout_session(
@@ -52,7 +55,6 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         payment.session_url = checkout_session["session_url"]
         payment.session_id = checkout_session["session_id"]
         payment.save()
-
 
     def perform_create(self, serializer):
         with transaction.atomic():
@@ -66,6 +68,22 @@ class BorrowingViewSet(viewsets.ModelViewSet):
                 self.create_payment(serializer)
             else:
                 raise ValidationError({"error": "This book is not available"})
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        response = Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+        if response.status_code == status.HTTP_201_CREATED:
+            borrowing_info = response.data
+            message = f"New borrowing created! Details: \n{borrowing_info}"
+            send_telegram_message(message)
+
+        return response
 
     def get_queryset(self):
         queryset = self.queryset
