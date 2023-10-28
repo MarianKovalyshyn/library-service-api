@@ -10,23 +10,59 @@ from book_service.models import Book
 from book_service.serializers import BookSerializer
 from borrowing_service.models import Borrowing
 from borrowing_service.serializers import (
-    BorrowingSerializer, BorrowingDetailSerializer
+    BorrowingSerializer,
+    BorrowingDetailSerializer,
 )
 
 
 BORROWING_URL = reverse("borrowing-service:borrowing-list")
 
 
-def book(**params):
+def sample_user(**params):
+    defaults = {
+        "email": "test@test.com",
+        "password": "password",
+    }
+
+    defaults.update(params)
+
+    return get_user_model().objects.create_user(**defaults)
+
+
+def sample_superuser(**params):
+    defaults = {
+        "email": "admin@test.com",
+        "password": "password",
+    }
+
+    defaults.update(params)
+
+    return get_user_model().objects.create_superuser(**defaults)
+
+
+def sample_book(**params):
     defaults = {
         "title": "book",
         "author": "author",
         "inventory": 10,
         "daily_fee": 0.25,
     }
+
     defaults.update(params)
 
     return Book.objects.create(**defaults)
+
+
+def sample_borrowing(**params):
+    defaults = {
+        "user": sample_user(),
+        "book": sample_book(),
+        "expected_return_date": timezone.now() + timedelta(days=1),
+    }
+
+    defaults.update(params)
+
+    return Borrowing.objects.create(**defaults)
 
 
 def detail_url(borrowing_id: int):
@@ -38,31 +74,21 @@ class UnauthenticatedBorrowingTests(TestCase):
         self.client = APIClient()
 
     def test_auth_required(self):
-        res = self.client.get(BORROWING_URL)
-        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        response = self.client.get(BORROWING_URL)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class AuthenticatedBorrowingTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = get_user_model().objects.create_user(
-            "test@test.com",
-            "password123",
-        )
-        self.client.force_authenticate(self.user)
-        self.book1 = book()
-        self.book2 = book(title="book2")
-        self.serializer = BookSerializer(self.book1)
-        self.borrowing = Borrowing.objects.create(
-            book=self.book1,
-            user=self.user,
-            expected_return_date=timezone.now() + timedelta(days=1),
-        )
+        self.borrowing = sample_borrowing()
+        self.client.force_authenticate(self.borrowing.user)
+        self.serializer = BookSerializer(self.borrowing.book)
 
     def test_list_borrowings(self):
         response = self.client.get(BORROWING_URL)
 
-        borrowings = Borrowing.objects.filter(user=self.user)
+        borrowings = Borrowing.objects.filter(user=self.borrowing.user)
         serializer = BorrowingSerializer(borrowings, many=True)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -81,42 +107,72 @@ class AuthenticatedBorrowingTests(TestCase):
 class TestFilter(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = get_user_model().objects.create_superuser(
-            "admin@test.com",
-            "admin1234",
+
+        self.borrowing1 = sample_borrowing(user=sample_superuser())
+        self.borrowing2 = Borrowing.objects.create(
+            book=sample_book(title="book2"),
+            user=self.borrowing1.user,
+            actual_return_date=timezone.now() + timedelta(hours=5),
+            expected_return_date=timezone.now() + timedelta(days=1),
         )
 
-        self.client.force_authenticate(self.user)
-        self.book1 = book()
-        self.book2 = book(title="book2")
-        self.serializer1 = BookSerializer(self.book1)
-        self.serializer2 = BookSerializer(self.book2)
-        self.borrowing1 = Borrowing.objects.create(
-            book=self.book1,
-            user=self.user,
-            expected_return_date=timezone.now() + timedelta(days=1),
-        )
-        self.borrowing2 = Borrowing.objects.create(
-            book=self.book2,
-            user=self.user,
-            actual_return_date=timezone.now(),
-            expected_return_date=timezone.now() + timedelta(days=1),
-        )
+        self.client.force_authenticate(self.borrowing1.user)
+
+        self.serializer1 = BookSerializer(self.borrowing1.book)
+        self.serializer2 = BookSerializer(self.borrowing2.book)
 
     def test_borrowings_filter(self):
-        res_user = self.client.get(
-            BORROWING_URL,
-            {"user_id": f"{self.user.id}"}
+        response_user = self.client.get(
+            BORROWING_URL, {"user_id": f"{self.borrowing1.user.id}"}
         )
 
-        res_user_is_active = self.client.get(
+        response_user_is_active = self.client.get(
             BORROWING_URL,
-            {"user_id": f"{self.user.id}"}, {"is_active": "True"}
+            {"user_id": f"{self.borrowing1.user.id}"},
+            {"is_active": "True"},
         )
 
         serializer1 = BorrowingSerializer(self.borrowing1)
         serializer2 = BorrowingSerializer(self.borrowing2)
 
-        self.assertIn(serializer1.data, res_user.data)
-        self.assertIn(serializer1.data, res_user_is_active.data)
-        self.assertIn(serializer2.data, res_user_is_active.data)
+        self.assertIn(serializer1.data, response_user.data)
+        self.assertIn(serializer1.data, response_user_is_active.data)
+        self.assertIn(serializer2.data, response_user_is_active.data)
+
+
+class AdminBorrowingViewSetTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.admin_user = sample_superuser()
+        self.client.force_authenticate(self.admin_user)
+
+    def test_filter_user_borrowings_by_id(self):
+        self.borrowing = sample_borrowing()
+        url = BORROWING_URL + f"?user_id={self.borrowing.user.id}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class ReturnBookTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.borrowing = sample_borrowing()
+        self.user = self.borrowing.user
+        self.book = self.borrowing.book
+        self.client.force_authenticate(self.user)
+
+    def test_return_book(self):
+        response = self.client.post(
+            f"http://127.0.0.1:8000/api/borrowing-service/borrowings/"
+            f"{self.borrowing.id}/return_borrowing/"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data,
+            {"message": "Borrowing returned successfully"}
+        )
+        self.borrowing.refresh_from_db()
+        self.assertIsNotNone(self.borrowing.actual_return_date)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.inventory, 11)
