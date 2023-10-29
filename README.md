@@ -16,6 +16,7 @@ pip install -r requirements.txt
 python manage.py makemigrations
 python manage.py migrate
 python manage.py runserver
+python manage.py qcluster
 ```
 For Mac (and Linux):
 ```shell
@@ -27,6 +28,7 @@ pip install -r requirements.txt
 python manage.py makemigrations
 python manage.py migrate
 python manage.py runserver
+python manage.py qcluster
 ```
 
 ## Features:
