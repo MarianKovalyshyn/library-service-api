@@ -7,7 +7,7 @@ from notifications_service.notification_function import send_telegram_message
 
 def check_overdue_borrowings():
     today = datetime.now(pytz.utc)
-    tomorrow = today + timedelta(days=1)
+    tomorrow = today + timedelta(days=1) + timedelta(hours=3)
 
     borrowings = Borrowing.objects.all()
 
@@ -18,8 +18,8 @@ def check_overdue_borrowings():
 
     for borrowing in overdue_borrowings:
         message = f"Borrowing is overdue! Details: \n{borrowing}"
+        send_telegram_message(message)
 
     if not overdue_borrowings:
         message = "No borrowings overdue today!"
-
-    send_telegram_message(message)
+        send_telegram_message(message)
